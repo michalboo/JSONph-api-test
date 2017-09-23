@@ -2,7 +2,10 @@ require_relative "../spec_helper"
 
 
 describe JSONph do
-  before(:all) { @client = JSONph::Client.new }
+  before(:all) do
+    @client = JSONph::Client.new
+    @valid_user_id = @client.users.get.parsed_response.sample["id"]
+  end
 
   let(:required_user_fields) { %w(name username email phone website) }
   let(:invalid_id_examples) {[
@@ -12,8 +15,9 @@ describe JSONph do
   ]}
 
   context "GET /users" do
+    before(:all) { @users = @client.users.get }
+
     context "when called without specifying query parameters" do
-      before(:all) { @users = @client.users.get }
       it "returns a 200 response code" do
         expect(@users.code).to eq 200
       end
@@ -42,13 +46,41 @@ describe JSONph do
         end
       end
     end
+
+    context "when called with query parameters" do
+
+
+      it "returns results matching the given query" do
+        required_user_fields.each do |field|
+          param_value = @users.parsed_response.sample[field]
+          response = @client.users.get(query: { field => param_value})
+          expect(response.code).to eq 200
+          expect(response.length).to eq 1
+        end
+
+      end
+
+      it "doesn't support partial matches" do
+        sample_username = @users.parsed_response.sample["username"]
+        invalid_examples = [
+          sample_username[0...-1], # Cut off last character
+          "#{sample_username}_xxx", # Added extra characters
+          "*" # Attempt at using wildcard matching
+        ]
+
+        invalid_examples.each do |example|
+          response = @client.users.get(query: { "username" => example })
+          expect(response.code).to eq 200
+          expect(response.parsed_response).to be_empty
+        end
+      end
+    end
   end
 
   context "GET /users/{ID}" do
     context "when called with a valid (existing) id" do
       before(:all) do
-        @valid_id = @client.users.get.parsed_response.sample["id"]
-        @response = @client.users.append(@valid_id).get
+        @response = @client.users.append(@valid_user_id).get
       end
 
       it "returns a 200 response code" do
@@ -64,6 +96,38 @@ describe JSONph do
       it "returns a 404 response code" do
         invalid_id_examples.each do |id|
           expect(@client.users.append(id).get.code).to eq 404
+        end
+      end
+    end
+  end
+
+  context "PATCH /users/{ID}" do
+    context "when called with a valid (existing) id" do
+      before(:all) do
+        @example_edit = {
+          "name" => Faker::Name.name,
+          "email" => Faker::Internet.email
+        }
+        @response = @client.users.append(@valid_user_id).patch(
+          body: @example_edit
+        )
+      end
+
+      it "returns a 200 response code" do
+        expect(@response.code).to eq 200
+      end
+
+      it "includes the modified information in the response body" do
+        @example_edit.each do |k,v|
+          expect(@response.parsed_response[k]).to eq v
+        end
+      end
+    end
+
+    context "when called with an invalid (non-existent) id" do
+      it "returns a 404 response code" do
+        invalid_id_examples.each do |id|
+          expect(@client.users.append(id).patch.code).to eq 404
         end
       end
     end
