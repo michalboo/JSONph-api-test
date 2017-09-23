@@ -7,6 +7,9 @@ module JSONph
     debug_output $stdout if ENV["VERBOSE"] == "true"
 
     base_uri "http://jsonplaceholder.typicode.com"
+    headers "Connection" => "keep-alive"
+    headers "User-Agent" => "JSONph::Client"
+
     attr_reader :path
 
     def initialize(path: nil)

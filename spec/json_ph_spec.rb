@@ -3,7 +3,6 @@ require_relative "spec_helper"
 describe JSONph::Client do
   before(:each) { @client = JSONph::Client.new }
 
-
   describe "::new" do
     it "Initializes a JSONph::Client class" do
       expect(JSONph::Client.new).to be_instance_of(JSONph::Client)

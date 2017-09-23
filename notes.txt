@@ -1,0 +1,23 @@
+Get a list of the following attributes about a user
+○ Name
+○ Username
+○ Email
+○ Phone
+○ Website
+
+
+● Get a 404 status code when retrieving the details of an invalid user
+● Get a 200 status code when retrieving the details of a valid user
+ <- Specify valid vs non-existent
+
+● See the following fields in the header of a response when getting a list of users:
+○ Cache-Control => public
+○ Connection => keep-alive
+○ Content-Type => application/json
+ <- Headers include the expected values, but in some cases contain other information (e.g. "Content-Type: application/json; charset=utf-8"). Is that acceptable?
+
+
+● Create a new user
+ <- Are all of the fields listed above required fro user creation? Are there any expectations surrounding field validation that should be reflected in the tests? (Can they be empty? Is there a minimum/maximum length? Are there custom validity checks on email/phone/website fields?)
+
+ <- Is inspecting the POST/DELETE response sufficient for user creation/deletion tests?
